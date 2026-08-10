@@ -36,8 +36,8 @@ A Nvim plugin (lazy.nvim compatible) for managing structured plan/task files. Th
 ## Feature 1: Plugin scaffolding
   - [x] 1.1 Initialize lazy.nvim-compatible plugin structure
     - notes: follow lazy.nvim plugin spec; expose `setup(opts)` entry point
-    - [x] 1.1.1 Create directory layout (`lua/task-manager/`, `plugin/`, etc.)
-    - [x] 1.1.2 Write `plugin/task-manager.lua` that calls setup on load
+    - [x] 1.1.1 Create directory layout (`lua/template/`, `plugin/`, etc.)
+    - [x] 1.1.2 Write `plugin/template.lua` that calls setup on load
   - [x] 1.2 Define default config table
     - notes: fts tokens and keymaps should be over-ridable via `setup(opts)`
     - [x] 1.2.1 Default feature/task/subtask token patterns
@@ -370,7 +370,7 @@ subtask = "- [ ] {feature}.{task}.{subtask}) {name}",
 - [x] 18.1 command to hide completed task
   - should not delete the items. just hide completed items and features
   - only show uncompleted features and tasks
-  - [x] 18.1.1 create lua/task-manager/hide.lua with hidden_ranges logic and toggle_hide_completed
+  - [x] 18.1.1 create lua/template/hide.lua with hidden_ranges logic and toggle_hide_completed
   - [x] 18.1.2 register TaskHideCompleted command in init.lua
   - [x] 18.1.3 add <leader>th keymap in init.lua
   - [x] 18.1.4 write tests/hide_spec.lua (6 tests, all passing)
@@ -383,6 +383,8 @@ subtask = "- [ ] {feature}.{task}.{subtask}) {name}",
   - renamed TaskHideCompleted → TaskShowRemaining in init.lua and README
 - [x] 19.2 change hide completed/show remaining keymap to <leader>ts
   - changed <leader>tr → <leader>ts in init.lua and README
+- [ ] 19.3 add empty_task message to config
+default: 🧌 - "Job's done!"
 
 ## Feature 20: kick FTS
 - [x] 20.1 add kicked variable to config
@@ -392,13 +394,12 @@ subtask = "- [ ] {feature}.{task}.{subtask}) {name}",
   - [x] 20.1.1 update config init
   - [x] 20.1.2 update config example
   - [x] 20.1.3 update docs
-- [x] 20.2 add command and keymap <leader>tk 
+- [x] 20.2 add command and keymap <leader>tk
   - [x] 20.2.1 create lua/task-manager/kick.lua
-    - copy FTS to kicked md file
-    - keep the number and if a task or sub task put under matching feature in kicked. 
-      - if there is no feature for task or sub task copy feature
-      - if there is a feature put the task or sub task under that feature
-    - remove FTS from current location (same as remove command)
+    - [x] 20.2.1.1 copy FTS to kicked md file
+    - [x] 20.2.1.2 if no kicked md file present create one based on kicked location (relative project root not task file)
+    - [x] 20.2.1.3 keep the number and if a task or sub task put under matching feature in kicked (copying feature header if missing or inserting under feature if existing)
+    - [x] 20.2.1.4 remove FTS from current location (same as remove command)
   - [x] 20.2.2 register TaskKick command and <leader>tk keymap in init.lua
   - [x] 20.2.3 write tests/kick_spec.lua (9 tests, all passing)
 - [x] 20.3 update docs
@@ -419,4 +420,18 @@ subtask = "- [ ] {feature}.{task}.{subtask}) {name}",
 - default globs to  root of project in plan.md
 - can point to a file or directory
   - [x] 22.1.1 update docs
-- [ ] 22.2 add keymap ^T opens task file for project from any file in project
+- [x] 22.2 add keymap ^T opens task file for project from any file in project
+  - [x] 22.2.1 create spec.lua with open() resolving config.spec relative to cwd
+  - [x] 22.2.2 register TaskOpenSpec command and <C-t> keymap in init.lua
+  - [x] 22.2.3 update docs
+- [ ] 22.3 plan should be able to a directory and glob of files like {plan,tasks,spec} checks in order of list and opens in that file
+
+## Feature 23: go to text
+- [x] 23.1 if text passed to go to search features for word. if not found search tasks for value. if not found search sub tasks for value.
+  - [x] 23.1.1 add search_text helper to navigate.lua that searches index by token type and word (case-insensitive)
+  - [x] 23.1.2 update goto_target to call text search when parse_target returns nil
+  - [x] 23.1.3 add tests: finds feature, finds task, finds subtask, not found, case-insensitive 
+
+## Feature 24: add tmg
+- [ ] 24.1 move FTS a given feature or task number
+  - [ ] 24.1.1 if feature is moved to a feature number that already exists. insert at location and push (already written) remaining features down
