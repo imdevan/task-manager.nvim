@@ -3,7 +3,7 @@ local utils = require("task-manager.utils")
 
 local M = {}
 
-local ns = vim.api.nvim_create_namespace("task_manager_shadow")
+local ns = vim.api.nvim_create_namespace("task-manager_shadow")
 
 ---Recompute and redraw all shadow virtual text for `bufnr`.
 ---@param bufnr integer
@@ -44,7 +44,7 @@ end
 ---Attach shadow refresh to a buffer via autocmd.
 ---@param bufnr integer
 function M.attach(bufnr)
-	local group = vim.api.nvim_create_augroup("task_manager_shadow_" .. bufnr, { clear = true })
+	local group = vim.api.nvim_create_augroup("task-manager_shadow_" .. bufnr, { clear = true })
 	vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
 		buffer = bufnr,
 		group = group,

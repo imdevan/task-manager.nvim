@@ -214,6 +214,84 @@ describe("navigate", function()
       
       vim.api.nvim_buf_delete(bufnr, { force = true })
     end)
+
+    it("text search: finds a feature by word", function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+        "## Feature 1: Auth",
+        "- [ ] 1.1 Login",
+        "## Feature 2: Dashboard",
+        "- [ ] 2.1 Charts",
+      })
+      vim.api.nvim_set_current_buf(bufnr)
+
+      local result = navigate.goto_target(bufnr, "Dashboard")
+      assert.is_true(result)
+      assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
+
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end)
+
+    it("text search: finds a task when word not in features", function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+        "## Feature 1: Auth",
+        "- [ ] 1.1 Login",
+        "- [ ] 1.2 Logout",
+      })
+      vim.api.nvim_set_current_buf(bufnr)
+
+      local result = navigate.goto_target(bufnr, "Logout")
+      assert.is_true(result)
+      assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
+
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end)
+
+    it("text search: finds a subtask when word not in features or tasks", function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+        "## Feature 1: Auth",
+        "- [ ] 1.1 Login",
+        "  - [ ] 1.1.1 OAuth",
+      })
+      vim.api.nvim_set_current_buf(bufnr)
+
+      local result = navigate.goto_target(bufnr, "OAuth")
+      assert.is_true(result)
+      assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
+
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end)
+
+    it("text search: returns false when word not found anywhere", function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+        "## Feature 1: Auth",
+        "- [ ] 1.1 Login",
+      })
+      vim.api.nvim_set_current_buf(bufnr)
+
+      local result = navigate.goto_target(bufnr, "nonexistent")
+      assert.is_false(result)
+
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end)
+
+    it("text search: is case-insensitive", function()
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+        "## Feature 1: Auth",
+        "- [ ] 1.1 Login",
+      })
+      vim.api.nvim_set_current_buf(bufnr)
+
+      local result = navigate.goto_target(bufnr, "auth")
+      assert.is_true(result)
+      assert.equals(1, vim.api.nvim_win_get_cursor(0)[1])
+
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end)
   end)
 
   describe("goto_next_incomplete", function()

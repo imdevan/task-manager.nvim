@@ -60,15 +60,44 @@ local function tokens_match(token, target)
   return true
 end
 
+---Search for text in buffer lines of a given token type, return first matching lnum or nil
+---@param bufnr integer
+---@param index table[]
+---@param token_type string  "feature", "task", or "subtask"
+---@param word string  case-insensitive search term
+---@return integer|nil
+local function search_text(bufnr, index, token_type, word)
+  local lower = word:lower()
+  for _, token in ipairs(index) do
+    if token.type == token_type then
+      local line = utils.get_line(bufnr, token.lnum):lower()
+      if line:find(lower, 1, true) then
+        return token.lnum
+      end
+    end
+  end
+  return nil
+end
+
 ---Go to a specific feature, task, or subtask by number
 ---If the target is not found, try to fall back to the parent (task -> feature, subtask -> task)
+---If target is non-numeric text, search features, then tasks, then subtasks for the word.
 ---@param bufnr integer
----@param target string  e.g. "3", "3.2", or "3.2.1"
+---@param target string  e.g. "3", "3.2", "3.2.1", or a search word
 ---@return boolean  true if found and jumped, false otherwise
 function M.goto_target(bufnr, target)
   local parsed = parse_target(target)
   if not parsed then
-    vim.notify("Invalid target format. Use: # or #.# or #.#.#", vim.log.levels.ERROR)
+    -- Text search: features → tasks → subtasks
+    local index = parser.build_index(bufnr)
+    for _, token_type in ipairs({ "feature", "task", "subtask" }) do
+      local lnum = search_text(bufnr, index, token_type, target)
+      if lnum then
+        utils.set_cursor_line(lnum)
+        return true
+      end
+    end
+    vim.notify(string.format("No match found for '%s'", target), vim.log.levels.WARN)
     return false
   end
   

@@ -14,7 +14,7 @@ describe("shadow", function()
 	end)
 
 	local function get_virt_text(lnum)
-		local ns = vim.api.nvim_get_namespaces()["task_manager_shadow"]
+		local ns = vim.api.nvim_get_namespaces()["task-manager_shadow"]
 		if not ns then return nil end
 		local marks = vim.api.nvim_buf_get_extmarks(bufnr, ns, { lnum - 1, 0 }, { lnum - 1, -1 }, { details = true })
 		if #marks == 0 then return nil end
