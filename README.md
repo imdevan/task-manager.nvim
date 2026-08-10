@@ -122,6 +122,7 @@ All keymaps are prefixed with `<leader>t`. Set `keymaps.enabled = false` to disa
 | `<leader>ts` | Show remaining (incomplete) tasks |
 | `<leader>tk` | Kick (move) FTS item to kicked file |
 | `<leader>tR` | Renumber FTS tokens in place |
+| `<C-t>` | Open spec file |
 
 ## Commands
 
@@ -157,6 +158,7 @@ All keymaps are prefixed with `<leader>t`. Set `keymaps.enabled = false` to disa
 | `TaskShowRemaining` | Show only remaining (incomplete) tasks in a scratch buffer — press `<cr>`/`i`/`e` to jump to a task, `q` to return |
 | `TaskKick` | Move the FTS item under the cursor to the kicked file (copies it with its parent feature context, then removes it from the current buffer) |
 | `TaskRenumber` | Renumber all FTS tokens in the current buffer in place (auto-detects 0-based vs 1-based from existing numbers) |
+| `TaskOpenSpec` | Open the spec file (config.spec) from anywhere in the project |
 
 ## Custom Keymaps
 
@@ -164,10 +166,10 @@ Set `keymaps.enabled = false` and define your own mappings using the commands di
 
 ```lua
 {
-  "imdevan/task-manager.nvim",
+  "imdevan/template.nvim",
   opts = { keymaps = { enabled = false } },
   config = function(_, opts)
-    require("task-manager").setup(opts)
+    require("template").setup(opts)
     vim.keymap.set("n", "<leader>tt", "<cmd>TaskToggleCheckbox<cr>")
     vim.keymap.set("n", "<leader>taf", "<cmd>TaskAddFeature<cr>")
     -- etc.
@@ -177,13 +179,13 @@ Set `keymaps.enabled = false` and define your own mappings using the commands di
 
 ## Lualine
 
-`require("task-manager.statusline").summary()` returns a formatted string like `󰄲 6/7` for the current buffer (empty string when no tasks exist).
+`require("template.statusline").summary()` returns a formatted string like `󰄲 6/7` for the current buffer (empty string when no tasks exist).
 
 ```lua
 require("lualine").setup({
   sections = {
     lualine_x = {
-      { require("task-manager.statusline").summary },
+      { require("template.statusline").summary },
     },
   },
 })
