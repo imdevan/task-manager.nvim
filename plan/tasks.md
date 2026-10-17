@@ -433,5 +433,8 @@ default: 🧌 - "Job's done!"
   - [x] 23.1.3 add tests: finds feature, finds task, finds subtask, not found, case-insensitive 
 
 ## Feature 24: add tmg
-- [ ] 24.1 move FTS a given feature or task number
-  - [ ] 24.1.1 if feature is moved to a feature number that already exists. insert at location and push (already written) remaining features down
+- [x] 24.1 move FTS a given feature or task number
+  - [x] 24.1.1 if feature is moved to a feature number that already exists. insert at location and push remaining features down
+  - [x] 24.1.2 register TaskMoveTo command and <leader>tmg keymap in init.lua
+  - [x] 24.1.3 update docs in README.md
+  - [x] 24.1.4 add tests for move_to_target in tests/move_spec.lua

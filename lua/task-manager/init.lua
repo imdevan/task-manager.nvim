@@ -57,6 +57,15 @@ function M.setup(opts)
     require("task-manager.move").move_subtask_down_cursor()
   end, { desc = "Move the subtask under the cursor down within its task" })
 
+  vim.api.nvim_create_user_command("TaskMoveTo", function(opts)
+    local target = opts.args
+    if target and target ~= "" then
+      require("task-manager.move").move_to_target(vim.api.nvim_get_current_buf(), require("task-manager.utils").cursor_line(), target)
+    else
+      require("task-manager.move").move_to_prompt()
+    end
+  end, { nargs = "?", desc = "Move FTS item under cursor to a target feature/task/subtask number" })
+
   vim.api.nvim_create_user_command("TaskEjectFeature", function()
     require("task-manager.eject").eject_feature_cursor()
   end, { desc = "Eject the feature under the cursor (strip fts tokens, leaving plain text)" })
@@ -148,6 +157,7 @@ function M.setup(opts)
     map("<leader>tmj", "TaskMoveTaskDown", "Move task down")
     map("<leader>t[", "TaskMoveSubtaskUp", "Move subtask up")
     map("<leader>t]", "TaskMoveSubtaskDown", "Move subtask down")
+    map("<leader>tmg", "TaskMoveTo", "Move FTS item to target number")
     map("<leader>tef", "TaskEjectFeature", "Eject feature")
     map("<leader>tet", "TaskEjectTask", "Eject task")
     map("<leader>tes", "TaskEjectSubtask", "Eject subtask")

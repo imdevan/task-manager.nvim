@@ -782,4 +782,86 @@ describe("move_task", function()
     end)
   end)
 
+  describe("move_to_target", function()
+    it("moves feature 1 to position 3 pushing remaining features down", function()
+      local buf = make_buf({
+        "## Feature 1: Alpha",
+        "- [ ] 1.1 Task A",
+        "",
+        "## Feature 2: Beta",
+        "- [ ] 2.1 Task B",
+        "",
+        "## Feature 3: Gamma",
+        "- [ ] 3.1 Task C",
+      })
+
+      local res = move.move_to_target(buf, 1, "3")
+      assert.is_true(res)
+
+      local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+      assert.are.same({
+        "## Feature 1: Beta",
+        "- [ ] 1.1 Task B",
+        "",
+        "## Feature 2: Gamma",
+        "- [ ] 2.1 Task C",
+        "",
+        "## Feature 3: Alpha",
+        "- [ ] 3.1 Task A",
+      }, lines)
+    end)
+
+    it("moves feature 3 to position 1 pushing remaining features down", function()
+      local buf = make_buf({
+        "## Feature 1: Alpha",
+        "- [ ] 1.1 Task A",
+        "",
+        "## Feature 2: Beta",
+        "- [ ] 2.1 Task B",
+        "",
+        "## Feature 3: Gamma",
+        "- [ ] 3.1 Task C",
+      })
+
+      local res = move.move_to_target(buf, 7, "1")
+      assert.is_true(res)
+
+      local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+      assert.are.same({
+        "## Feature 1: Gamma",
+        "- [ ] 1.1 Task C",
+        "",
+        "## Feature 2: Alpha",
+        "- [ ] 2.1 Task A",
+        "",
+        "## Feature 3: Beta",
+        "- [ ] 3.1 Task B",
+      }, lines)
+    end)
+
+    it("moves task 1.1 to target feature 2", function()
+      local buf = make_buf({
+        "## Feature 1: Alpha",
+        "- [ ] 1.1 Task A",
+        "- [ ] 1.2 Task B",
+        "",
+        "## Feature 2: Beta",
+        "- [ ] 2.1 Task C",
+      })
+
+      local res = move.move_to_target(buf, 2, "2.1")
+      assert.is_true(res)
+
+      local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+      assert.are.same({
+        "## Feature 1: Alpha",
+        "- [ ] 1.1 Task B",
+        "",
+        "## Feature 2: Beta",
+        "- [ ] 2.1 Task A",
+        "- [ ] 2.2 Task C",
+      }, lines)
+    end)
+  end)
+
 end)

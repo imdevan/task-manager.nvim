@@ -106,6 +106,7 @@ All keymaps are prefixed with `<leader>t`. Set `keymaps.enabled = false` to disa
 | `<leader>tmj` | Move task down |
 | `<leader>t[` | Move subtask up |
 | `<leader>t]` | Move subtask down |
+| `<leader>tmg` | Move FTS item to target number (e.g. `3`, `2.1`) |
 | `<leader>tee` | Eject (feature, task, or subtask under cursor) |
 | `<leader>tef` | Eject feature |
 | `<leader>tet` | Eject task |
@@ -141,6 +142,7 @@ All keymaps are prefixed with `<leader>t`. Set `keymaps.enabled = false` to disa
 | `TaskMoveTaskDown` | Move the task under the cursor down within its feature |
 | `TaskMoveSubtaskUp` | Move the subtask under the cursor up within its task |
 | `TaskMoveSubtaskDown` | Move the subtask under the cursor down within its task |
+| `TaskMoveTo` | Move FTS item under the cursor to a target feature/task/subtask number |
 | `TaskEject` | Eject the feature, task, or subtask under the cursor (strip tokens, leaving plain text) |
 | `TaskEjectFeature` | Eject the feature under the cursor (strip tokens, leaving plain text) |
 | `TaskEjectTask` | Eject the task under the cursor (strip tokens, leaving plain text) |

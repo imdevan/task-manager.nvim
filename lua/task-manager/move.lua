@@ -554,4 +554,227 @@ function M.move_feature_down_cursor()
 	M.move_feature_down(bufnr, feature_lnum)
 end
 
+---Parse a move target string like "3", "3.2", or "3.2.1".
+---@param target string
+---@return table|nil { type: "feature"|"task"|"subtask", fn: integer, tn?: integer, sn?: integer }
+local function parse_move_target(target)
+	if not target or target == "" then
+		return nil
+	end
+	local cleaned = target:match("(%d+%.?%d*%.?%d*)") or target
+	local parts = vim.split(cleaned, ".", { plain = true })
+	local fn = tonumber(parts[1])
+	if not fn then
+		return nil
+	end
+	if #parts == 1 then
+		return { type = "feature", fn = fn }
+	elseif #parts == 2 then
+		local tn = tonumber(parts[2])
+		if not tn then
+			return nil
+		end
+		return { type = "task", fn = fn, tn = tn }
+	elseif #parts >= 3 then
+		local tn = tonumber(parts[2])
+		local sn = tonumber(parts[3])
+		if not tn or not sn then
+			return nil
+		end
+		return { type = "subtask", fn = fn, tn = tn, sn = sn }
+	end
+	return nil
+end
+
+---Move the FTS item at line `lnum` to a target position.
+---@param bufnr integer
+---@param lnum integer  1-indexed cursor line
+---@param target string  target position string e.g. "3", "2.1", "1.2.3"
+---@return boolean  true if moved, false otherwise
+function M.move_to_target(bufnr, lnum, target)
+	local parsed_target = parse_move_target(target)
+	if not parsed_target then
+		vim.notify(string.format("Invalid move target '%s'", tostring(target)), vim.log.levels.WARN)
+		return false
+	end
+
+	local ctx = parser.context_at(bufnr, lnum)
+	if not ctx then
+		vim.notify("No FTS item found at current cursor position", vim.log.levels.WARN)
+		return false
+	end
+
+	if ctx.type == "feature" then
+		local target_fn = parsed_target.fn
+		if ctx.fn == target_fn then
+			return true
+		end
+
+		local index = parser.build_index(bufnr)
+		local curr_feat_lnum = nil
+		for _, t in ipairs(index) do
+			if t.type == "feature" and t.fn == ctx.fn then
+				curr_feat_lnum = t.lnum
+				break
+			end
+		end
+		if not curr_feat_lnum then
+			return false
+		end
+
+		local curr_start, curr_end = get_feature_range(bufnr, curr_feat_lnum)
+		local curr_lines = vim.api.nvim_buf_get_lines(bufnr, curr_start - 1, curr_end, false)
+
+		-- Trim trailing blank lines from extracted block
+		while #curr_lines > 0 and curr_lines[#curr_lines]:match("^%s*$") do
+			table.remove(curr_lines)
+		end
+
+		-- Remove current feature block (and any surrounding blank line separator) from buffer
+		local del_start = curr_start
+		local del_end = curr_end
+		if del_start > 1 and utils.get_line(bufnr, del_start - 1):match("^%s*$") then
+			del_start = del_start - 1
+		elseif del_end < utils.line_count(bufnr) and utils.get_line(bufnr, del_end + 1):match("^%s*$") then
+			del_end = del_end + 1
+		end
+		vim.api.nvim_buf_set_lines(bufnr, del_start - 1, del_end, false, {})
+
+		local rem_index = parser.build_index(bufnr)
+		local rem_features = {}
+		for _, t in ipairs(rem_index) do
+			if t.type == "feature" then
+				table.insert(rem_features, t)
+			end
+		end
+
+		local insert_line = 0
+		if #rem_features == 0 then
+			insert_line = 0
+		elseif target_fn <= 1 then
+			insert_line = rem_features[1].lnum - 1
+		elseif target_fn > #rem_features then
+			insert_line = utils.line_count(bufnr)
+		else
+			insert_line = rem_features[target_fn].lnum - 1
+		end
+
+		local to_insert = {}
+		for _, l in ipairs(curr_lines) do
+			table.insert(to_insert, l)
+		end
+
+		if insert_line > 0 then
+			local prev_line = utils.get_line(bufnr, insert_line)
+			if prev_line:match("%S") then
+				table.insert(to_insert, 1, "")
+			end
+		end
+
+		if insert_line < utils.line_count(bufnr) then
+			local next_line = utils.get_line(bufnr, insert_line + 1)
+			if next_line:match("%S") then
+				table.insert(to_insert, "")
+			end
+		end
+
+		vim.api.nvim_buf_set_lines(bufnr, insert_line, insert_line, false, to_insert)
+		renumber.renumber(bufnr)
+
+		local new_index = parser.build_index(bufnr)
+		for _, t in ipairs(new_index) do
+			if t.type == "feature" and t.fn == target_fn then
+				if vim.api.nvim_get_current_buf() == bufnr then
+					pcall(utils.set_cursor_line, t.lnum)
+				end
+				break
+			end
+		end
+		return true
+
+	elseif ctx.type == "task" or ctx.type == "subtask" then
+		local task_lnum = nil
+		local index = parser.build_index(bufnr)
+		for _, t in ipairs(index) do
+			if t.type == "task" and t.fn == ctx.fn and t.tn == ctx.tn then
+				task_lnum = t.lnum
+				break
+			end
+		end
+		if not task_lnum then
+			return false
+		end
+
+		local curr_start, curr_end = get_task_range(bufnr, task_lnum)
+		local curr_lines = vim.api.nvim_buf_get_lines(bufnr, curr_start - 1, curr_end, false)
+
+		vim.api.nvim_buf_set_lines(bufnr, curr_start - 1, curr_end, false, {})
+
+		local rem_index = parser.build_index(bufnr)
+		local target_fn = parsed_target.fn
+		local target_tn = parsed_target.tn
+
+		local target_feat_lnum = nil
+		local tasks_in_feat = {}
+		for _, t in ipairs(rem_index) do
+			if t.type == "feature" and t.fn == target_fn then
+				target_feat_lnum = t.lnum
+			elseif t.type == "task" and t.fn == target_fn then
+				table.insert(tasks_in_feat, t)
+			end
+		end
+
+		local insert_line = 0
+		if target_feat_lnum then
+			if not target_tn or target_tn > #tasks_in_feat then
+				if #tasks_in_feat > 0 then
+					local _, last_t_end = get_task_range(bufnr, tasks_in_feat[#tasks_in_feat].lnum)
+					insert_line = last_t_end
+				else
+					insert_line = target_feat_lnum
+				end
+			elseif target_tn <= 1 then
+				if #tasks_in_feat > 0 then
+					insert_line = tasks_in_feat[1].lnum - 1
+				else
+					insert_line = target_feat_lnum
+				end
+			else
+				insert_line = tasks_in_feat[target_tn].lnum - 1
+			end
+		else
+			insert_line = utils.line_count(bufnr)
+		end
+
+		vim.api.nvim_buf_set_lines(bufnr, insert_line, insert_line, false, curr_lines)
+		renumber.renumber(bufnr)
+
+		local new_index = parser.build_index(bufnr)
+		for _, t in ipairs(new_index) do
+			if t.type == "task" and t.fn == target_fn then
+				if vim.api.nvim_get_current_buf() == bufnr then
+					pcall(utils.set_cursor_line, t.lnum)
+				end
+				break
+			end
+		end
+		return true
+	end
+
+	return false
+end
+
+---Prompt user for target move location and move item under cursor
+function M.move_to_prompt()
+	local bufnr = vim.api.nvim_get_current_buf()
+	local lnum = utils.cursor_line()
+	vim.ui.input({
+		prompt = "Move FTS to target (# or #.# or #.#.#): ",
+	}, function(input)
+		if input and input ~= "" then
+			M.move_to_target(bufnr, lnum, input)
+		end
+	end)
+end
+
 return M
