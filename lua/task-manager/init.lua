@@ -60,7 +60,8 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("TaskMoveTo", function(opts)
     local target = opts.args
     if target and target ~= "" then
-      require("task-manager.move").move_to_target(vim.api.nvim_get_current_buf(), require("task-manager.utils").cursor_line(), target)
+      require("task-manager.move").move_to_target(vim.api.nvim_get_current_buf(),
+        require("task-manager.utils").cursor_line(), target)
     else
       require("task-manager.move").move_to_prompt()
     end
@@ -117,6 +118,19 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("TaskChangeToSubtask", function()
     require("task-manager.change").changeTo_subtask_cursor()
   end, { desc = "Change the current line into a subtask token" })
+
+  vim.api.nvim_create_user_command("TaskAddOrChange", function(opts)
+    local kind = opts.args
+    if kind and kind ~= "" then
+      require("task-manager.add_or_change").add_or_change_cursor(kind)
+    else
+      require("task-manager.add_or_change").add_or_change_prompt()
+    end
+  end, {
+    nargs = "?",
+    complete = function() return require("task-manager.add_or_change").kinds end,
+    desc = "Add a feature/task/subtask on a blank line, or change the current line into one",
+  })
 
   vim.api.nvim_create_user_command("TaskShadowAttach", function()
     require("task-manager.shadow").attach(vim.api.nvim_get_current_buf())
@@ -176,6 +190,11 @@ function M.setup(opts)
     map("<leader>tR", "TaskRenumber", "Renumber FTS in place")
 
     vim.keymap.set("n", "<C-t>", "<cmd>TaskOpenSpec<cr>", { desc = "Open spec file" })
+
+    -- Ctrl+Shift+<key>; requires a terminal that reports extended keys
+    vim.keymap.set({ "n", "i" }, "<M-S-b>", "<cmd>TaskAddOrChange feature<cr>", { desc = "Add or change to feature" })
+    vim.keymap.set({ "n", "i" }, "<M-S-n>", "<cmd>TaskAddOrChange task<cr>", { desc = "Add or change to task" })
+    vim.keymap.set({ "n", "i" }, "<M-S-m>", "<cmd>TaskAddOrChange subtask<cr>", { desc = "Add or change to subtask" })
 
     local ok, wk = pcall(require, "which-key")
     if ok then
