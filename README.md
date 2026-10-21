@@ -124,6 +124,9 @@ All keymaps are prefixed with `<leader>t`. Set `keymaps.enabled = false` to disa
 | `<leader>tk` | Kick (move) FTS item to kicked file |
 | `<leader>tR` | Renumber FTS tokens in place |
 | `<C-t>` | Open spec file |
+| `<M-S-b>` | Add or change to feature (normal/insert) |
+| `<M-S-n>` | Add or change to task (normal/insert) |
+| `<M-S-m>` | Add or change to subtask (normal/insert) |
 
 ## Commands
 
@@ -156,6 +159,7 @@ All keymaps are prefixed with `<leader>t`. Set `keymaps.enabled = false` to disa
 | `TaskChangeToFeature` | Change the current line into a feature token |
 | `TaskChangeToTask` | Change the current line into a task token (converts a feature to a task of the preceding feature if needed) |
 | `TaskChangeToSubtask` | Change the current line into a subtask token |
+| `TaskAddOrChange [feature\|task\|subtask]` | On a blank line, add a new feature/task/subtask; otherwise change the current line into one (prompts for the kind if omitted) |
 | `TaskShadowAttach` | Attach shadow virtual text (completion counts) to the current buffer |
 | `TaskShowRemaining` | Show only remaining (incomplete) tasks in a scratch buffer — press `<cr>`/`i`/`e` to jump to a task, `q` to return |
 | `TaskKick` | Move the FTS item under the cursor to the kicked file (copies it with its parent feature context, then removes it from the current buffer) |
