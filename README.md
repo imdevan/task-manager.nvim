@@ -53,7 +53,7 @@ just test
     feature_line = false,
     zero_index   = false,
     kicked       = "kicked",
-    spec          = "plan.md",
+    spec          = "plan/tasks.md",
   },
 }
 ```
@@ -85,7 +85,7 @@ File name (relative to the project root) for items moved by the kick command. If
 
 ### `spec`
 
-Path to the PRD (product requirements document) file or directory, relative to the project root. Can point to a specific file or a directory. Defaults to `"plan.md"`.
+Path to the PRD (product requirements document) file or directory, relative to the project root. Can point to a specific file or a directory. Defaults to `"plan/tasks.md"`.
 
 ## Keymaps
 

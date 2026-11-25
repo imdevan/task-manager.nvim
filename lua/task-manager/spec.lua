@@ -45,7 +45,7 @@ end
 ---Supports plain file, directory (tries plan/tasks/spec.md in order),
 ---and brace glob patterns like "docs/{plan,tasks,spec}".
 function M.open()
-  local spec = config.options.spec or "plan.md"
+  local spec = config.options.spec or "plan/tasks.md"
   local cwd  = vim.fn.getcwd()
   local list = candidates(spec, cwd)
 

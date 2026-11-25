@@ -172,7 +172,26 @@ describe("change", function()
 			assert.are.same({
 				"## Feature 1: First",
 				"- [ ] 1.1 Task",
-				"  - [ ] 1.2 Subtask",
+				"- [ ] 1.2 Subtask",
+			}, lines)
+		end)
+
+		it("moves following sibling subtasks under the new task and resets numbering", function()
+			vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+				"- [ ] 5.2 foo",
+				"  - [ ] 5.2.1 foo",
+				"  - [ ] 5.2.2 foo",
+				"  - [ ] 5.2.3 foo",
+				"  - [ ] 5.2.4 foo",
+			})
+			change.changeTo_task(bufnr, 4)
+			local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+			assert.are.same({
+				"- [ ] 5.2 foo",
+				"  - [ ] 5.2.1 foo",
+				"  - [ ] 5.2.2 foo",
+				"- [ ] 5.3 foo",
+				"  - [ ] 5.3.1 foo",
 			}, lines)
 		end)
 	end)

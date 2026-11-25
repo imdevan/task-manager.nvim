@@ -124,9 +124,43 @@ function M.changeTo_task(bufnr, lnum)
   end
 
   local indent = utils.get_line(bufnr, lnum):match("^(%s*)") or ""
+  local followers = {}
+
+  if token and token.type == "subtask" then
+    -- A promoted subtask moves out to the parent task's indent level, and the
+    -- subtasks that followed it become its children.
+    for i = lnum - 1, 1, -1 do
+      local t = parser.parse_line(utils.get_line(bufnr, i))
+      if t and t.type == "task" then
+        indent = utils.get_line(bufnr, i):match("^(%s*)") or ""
+        break
+      end
+    end
+    for i = lnum + 1, vim.api.nvim_buf_line_count(bufnr) do
+      local t = parser.parse_line(utils.get_line(bufnr, i))
+      if t and t.type ~= "subtask" then break end
+      if t then followers[#followers + 1] = i end
+    end
+  end
+
   utils.set_line(bufnr, lnum,
     indent .. utils.format_fts(config.options.tokens.task, ref_fn, new_tn, nil, name))
   renumber.push_down(bufnr, lnum, "task", ref_fn)
+
+  -- push_down already moved the followers to the new task number; restart
+  -- their subtask numbering under it.
+  local sub_seq = config.options.zero_index and 0 or 1
+  for _, fl in ipairs(followers) do
+    local line = utils.get_line(bufnr, fl)
+    local pat, caps = utils.compile_template(config.options.tokens.subtask)
+    local matches = { line:match(pat) }
+    local named = {}
+    for i, cap_name in ipairs(caps) do named[cap_name] = matches[i] end
+    utils.set_line(bufnr, fl,
+      (line:match("^(%s*)") or "") .. utils.format_fts(
+        config.options.tokens.subtask, ref_fn, new_tn, sub_seq, named.name or "", line:match("%[(.)]")))
+    sub_seq = sub_seq + 1
+  end
 end
 
 ---Convert the line at `lnum` into a subtask token under the nearest task above.
